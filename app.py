@@ -54,89 +54,32 @@ def create_model_pred(prd,prv,mth):
   predict_aop = scaler.inverse_transform(reg.predict(pred_var).reshape(-1,1))
 
   # Predict Price
-  if prd == "อ้อยโรงงาน":
-    file_prd = "C:/Users/HP/Desktop/RS_FINAL/price/ALL_FOR_" + cvt_eng[prd] + "_PRICE.csv"
-    data = pd.read_csv(file_prd)
-    data.year = data.year.astype(str)
-    data.month = data.month.astype(str)
-    data['Date'] = data['year'] + '-' + data['month']
-    data.index = pd.to_datetime(data.Date, format='%Y-%m')
-    del data['Date']
-    data = data[data['price'] != 0]
-    corr = data.corr(method="spearman")['price']
-    exogenous_features = list(corr[(abs(corr)>=0.2) & (corr.index != 'price')].index)
-    df = data[exogenous_features + ['price']]
-    # normalize the dataset
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    df['price']= scaler.fit_transform(np.array(df['price']).reshape(-1,1))
+  file_prd = "C:/Users/HP/Desktop/RS_FINAL/price/ALL_FOR_" + cvt_eng[prd] + "_PRICE.csv"
+  data = pd.read_csv(file_prd)
+  data['year'] = data['year'] -543
+  data.year = data.year.astype(str)
+  data.month = data.month.astype(str)
+  data['Date'] = data['year'] + '-' + data['month']
+  data.index = pd.to_datetime(data.Date, format='%Y-%m')
+  del data['Date']
+  data = data[data['price'] != 0]
+  corr = data.corr(method="spearman")['price']
+  exogenous_features = list(corr[(abs(corr)>=0.2) & (corr.index != 'price')].index)
+  df = data[exogenous_features + ['price']]
+  # normalize the dataset
+  scaler = MinMaxScaler(feature_range=(0, 1))
+  df['price']= scaler.fit_transform(np.array(df['price']).reshape(-1,1))
+  # Model
+  reg2 = LinearRegression().fit(df.drop(columns = ['price']), df['price'])
+  # Predict
+  fore_var = pd.read_csv("C:/Users/HP/Desktop/RS_FINAL/For_Forecast/all_forecast_price_new.csv")
+  pred_var = fore_var[(fore_var['year'] == current_year) & (fore_var['month'] == cvt_mth[mth])]
+  pred_var = pred_var[exogenous_features]
+  predict_price = scaler.inverse_transform(reg2.predict(pred_var).reshape(-1,1))
+  return float(predict_aop), float(predict_price)
 
-    # Model
-    reg2 = LinearRegression().fit(df.drop(columns = ['price']), df['price'])
-
-    # Predict
-    fore_var = pd.read_csv("C:/Users/HP/Desktop/RS_FINAL/For_Forecast/all_forecast_price_new.csv")
-    pred_var = fore_var[(fore_var['year'] == current_year) & (fore_var['month'] == cvt_mth[mth])]
-    pred_var = pred_var[exogenous_features]
-    predict_price = scaler.inverse_transform(reg2.predict(pred_var).reshape(-1,1))
-    return float(predict_aop), float(predict_price)
-
-  else:
-    file_prd = "C:/Users/HP/Desktop/RS_FINAL/price/ALL_FOR_" + cvt_eng[prd] + "_PRICE.csv"
-    data = pd.read_csv(file_prd)
-    data.year = data.year.astype(str)
-    data.month = data.month.astype(str)
-    data['Date'] = data['year'] + '-' + data['month']
-    data.index = pd.to_datetime(data.Date, format='%Y-%m')
-    del data['Date']
-    del data['max_price']
-    del data['year']
-    del data['month']
-    data = data[data['min_price'] != 0]
-    corr = data.corr(method="spearman")['min_price']
-    exogenous_features = list(corr[(abs(corr)>=0.2) & (corr.index != 'min_price')].index)
-    df = data[exogenous_features + ['min_price']]
-    # normalize the dataset
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    df['min_price']= scaler.fit_transform(np.array(df['min_price']).reshape(-1,1))
-
-    # Model
-    reg2 = LinearRegression().fit(df.drop(columns = ['min_price']), df['min_price'])
-
-    # Predict
-    fore_var = pd.read_csv("C:/Users/HP/Desktop/RS_FINAL/For_Forecast/all_forecast_price_new.csv")
-    pred_var = fore_var[(fore_var['year'] == current_year) & (fore_var['month'] == cvt_mth[mth])]
-    pred_var = pred_var[exogenous_features]
-    predict_min_price = scaler.inverse_transform(reg2.predict(pred_var).reshape(-1,1))
-
-
-    file_prd = "C:/Users/HP/Desktop/RS_FINAL/price/ALL_FOR_" + cvt_eng[prd] + "_PRICE.csv"
-    data = pd.read_csv(file_prd)
-    data.year = data.year.astype(str)
-    data.month = data.month.astype(str)
-    data['Date'] = data['year'] + '-' + data['month']
-    data.index = pd.to_datetime(data.Date, format='%Y-%m')
-    del data['Date']
-    del data['min_price']
-    data = data[data['max_price'] != 0]
-    corr = data.corr(method="spearman")['max_price']
-    exogenous_features = list(corr[(abs(corr)>=0.2) & (corr.index != 'max_price')].index)
-    df = data[exogenous_features + ['max_price']]
-    # normalize the dataset
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    df['max_price']= scaler.fit_transform(np.array(df['max_price']).reshape(-1,1))
-
-    # Model
-    reg3 = LinearRegression().fit(df.drop(columns = ['max_price']), df['max_price'])
-
-    # Predict
-    fore_var = pd.read_csv("C:/Users/HP/Desktop/RS_FINAL/For_Forecast/all_forecast_price_new.csv")
-    pred_var = fore_var[(fore_var['year'] == current_year) & (fore_var['month'] == cvt_mth[mth])]
-    pred_var = pred_var[exogenous_features]
-    predict_max_price = scaler.inverse_transform(reg3.predict(pred_var).reshape(-1,1))
-    return float(predict_aop), float(predict_min_price), float(predict_max_price)
-
-cvt_kg = {'ข้าวนาปี' : 100,
-           'ข้าวนาปรัง' : 100,
+cvt_kg = {'ข้าวนาปี' : 1000,
+           'ข้าวนาปรัง' : 1000,
            'ข้าวโพดเลี้ยงสัตว์' : 1,
            'อ้อยโรงงาน' : 1000}
 
@@ -152,16 +95,18 @@ def index():
         return render_template("mainpage copy.html",year = current_year, prediction = "ในช่วงเดือนเมษายน ถึงเดือนพฤศจิกายนจะไม่มีการเก็บเกี่ยวอ้อย")
       else:
         aop, price = create_model_pred(prd,prv,mth)
-        profit = aop*float(area)*price/cvt_kg[prd]
-        return render_template("mainpage copy.html",year = current_year, prediction = f'''เดือน{mth} {prd}จะมีปริมาณผลผลิต {round(aop,2)} กิโลกรัมต่อไร่ 
+        price = price/cvt_kg[prd]
+        profit = aop*float(area)*price
+        return render_template("mainpage copy.html",year = current_year, prediction = f'''เดือน{mth} {prd}ของจังหวัด{prv}จะมีปริมาณผลผลิต {round(aop,2)} กิโลกรัมต่อไร่ 
         และจะมีราคาประมาณ {round(price,2)} บาทต่อกิโลกรัม 
-        พื้นที่ {area} ไร่ จะขายอ้อยได้ {round(profit,2)} บาท''')
+        พื้นที่ {area} ไร่ จะขายได้ {round(profit,2)} บาท''')
     else:
-      aop, min_price, max_price = create_model_pred(prd,prv,mth)
-      profit = aop*float(area)*max_price/cvt_kg[prd]
-    return render_template("mainpage copy.html",year = current_year, prediction = f'''เดือน{mth} {prd}จะมีปริมาณผลผลิต {round(aop,2)} กิโลกรัมต่อไร่ 
-    และจะมีราคาประมาณ {round(min_price/cvt_kg[prd],2)} ถึง {round(max_price/cvt_kg[prd],2)} บาทต่อกิโลกรัม 
-    พื้นที่ {area} ไร่ จะขายอ้อยได้ {round(profit,2)} บาท''')
+      aop, price = create_model_pred(prd,prv,mth)
+      price = price/cvt_kg[prd]
+      profit = aop*float(area)*price
+      return render_template("mainpage copy.html",year = current_year, prediction = f'''เดือน{mth} {prd}ของจังหวัด{prv}จะมีปริมาณผลผลิต {round(aop,2)} กิโลกรัมต่อไร่ 
+      และจะมีราคาประมาณ {round(price,2)} บาทต่อกิโลกรัม 
+      พื้นที่ {area} ไร่ จะขายอ้อยได้ {round(profit,2)} บาท''')
   else:
     return render_template("mainpage copy.html", year = current_year, prediction = "")
 
