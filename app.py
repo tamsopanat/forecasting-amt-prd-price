@@ -2,13 +2,13 @@ import requests
 from flask import Flask, request,render_template
 import pandas as pd
 import numpy as np
-import tensorflow as tf
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 from datetime import date
 from sklearn.linear_model import LinearRegression
 
 current_year = date.today().year
+current_year = current_year + 1
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -32,7 +32,7 @@ cvt_mth = {'มกราคม' : 1,
 
 def create_model_pred(prd,prv,mth):
   # Predict AOP
-  data = pd.read_csv("C:/Users/HP/Desktop/RS_FINAL/amt_of_prd_per_area/all_for_"+ cvt_eng[prd].lower()+".csv")
+  data = pd.read_csv("amt_of_prd_per_area/all_for_"+ cvt_eng[prd].lower()+".csv")
   data.index = data['year']
   del data['year']
   data = data[data.province == prv]
@@ -48,13 +48,13 @@ def create_model_pred(prd,prv,mth):
   reg = LinearRegression().fit(df.drop(columns = ['Amount_of_product_per_area']), df['Amount_of_product_per_area'])
 
   # Predict
-  fore_var = pd.read_csv("C:/Users/HP/Desktop/RS_FINAL/For_Forecast/all_forecast_aop.csv")
+  fore_var = pd.read_csv("For_Forecast/all_forecast_aop.csv")
   pred_var = fore_var[(fore_var['province'] == prv) & (fore_var['year'] == current_year)]
   pred_var = pred_var[exogenous_features +  ['temp_AM', 'rain_AM', 'humid_AM', 'temp_PM', 'rain_PM']]
   predict_aop = scaler.inverse_transform(reg.predict(pred_var).reshape(-1,1))
 
   # Predict Price
-  file_prd = "C:/Users/HP/Desktop/RS_FINAL/price/ALL_FOR_" + cvt_eng[prd] + "_PRICE.csv"
+  file_prd = "price/ALL_FOR_" + cvt_eng[prd] + "_PRICE.csv"
   data = pd.read_csv(file_prd)
   data['year'] = data['year'] -543
   data.year = data.year.astype(str)
@@ -72,7 +72,7 @@ def create_model_pred(prd,prv,mth):
   # Model
   reg2 = LinearRegression().fit(df.drop(columns = ['price']), df['price'])
   # Predict
-  fore_var = pd.read_csv("C:/Users/HP/Desktop/RS_FINAL/For_Forecast/all_forecast_price_new.csv")
+  fore_var = pd.read_csv("For_Forecast/all_forecast_price_new.csv")
   pred_var = fore_var[(fore_var['year'] == current_year) & (fore_var['month'] == cvt_mth[mth])]
   pred_var = pred_var[exogenous_features]
   predict_price = scaler.inverse_transform(reg2.predict(pred_var).reshape(-1,1))
